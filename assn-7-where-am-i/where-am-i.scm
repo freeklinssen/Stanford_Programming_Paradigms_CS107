@@ -140,7 +140,7 @@
 (define (partition pivot num-list)
   (if (null? num-list) '(() ())
       (let ((split-of-rest (partition pivot (cdr num-list))))
-	(if (< (car num-list) pivot)
+	(if (< (car (car num-list)) (car pivot))
 	    (list (cons (car num-list) (car split-of-rest)) (cadr split-of-rest))
 	    (list (car split-of-rest) (cons (car num-list) (car (cdr split-of-rest))))))))
 
@@ -175,6 +175,7 @@
   (cond ((null? ls) '())
 	((equal? (car ls) elem) (remove elem (cdr ls)))
 	(else (cons (car ls) (remove elem (cdr ls))))))
+
                   
 ;; 
 ;; Function: all-guesses
@@ -209,3 +210,97 @@
 ;; it to override exisiting definitions and including
 ;; the most recently implemented into the lot.
 ;;
+
+
+;; create a list with all the guesses in it.
+
+
+
+;;Write functions that operate on a single guess to determine if it is clumped or not
+
+
+
+;; 1  intersection-points
+
+(define (intersection-points circles)
+  (if (= (length circles) 1) '()
+  
+  (append
+  (apply append 
+      (map (lambda (other_circles) (intersect (car circles) other_circles)) 
+      (cdr circles))  
+  )
+  (intersection-points (cdr circles))
+  )
+  )
+)
+
+
+
+;; 2  distance-product
+
+(define (distance-product point pointList)
+
+  (apply * 
+  (map (lambda (otherPoits) (dist point otherPoits)) (remove point pointList)) 
+  )
+)
+
+
+
+;; 3 rate-points
+
+(define (rate-points points)
+
+  (map (lambda (currentPoint) (list (distance-product currentPoint points) currentPoint))
+  points
+  )
+)
+
+
+
+;; 4 sort-points 
+
+(define (sort-points ratedPoints)
+  (quicksort ratedPoints)
+)
+
+
+
+;; 5 clumped-points
+
+(define (clumped-points points)
+
+  (prefix-of-list (map (lambda (sortedPoints) (cadr sortedPoints)) (sort-points (rate-points points))) (/ (length points) 2))
+)
+
+
+
+;; 6 average-point
+
+(define (average ls) 
+  (/ (apply + ls) (length ls)))
+
+
+(define (average-point points)
+
+(let ((avgPoint (list (/ (apply + (map car points)) (length (map car points))) (/ (apply + (map cadr points)) (length (map cadr points))))))
+(list (distance-product avgPoint points) avgPoint) 
+)
+)
+
+
+
+;; 7 best-estimate
+
+(define (best-estimate guess)
+(average-point (clumped-points (intersection-points guess)))
+)
+
+
+
+;; 8 where-am-i
+(define (where-am-i distances stars)
+  (quicksort
+    (map best-estimate (all-guesses distances stars))))
+
